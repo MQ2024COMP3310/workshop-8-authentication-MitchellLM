@@ -3,6 +3,8 @@ from flask_login import login_user, login_required, logout_user
 from sqlalchemy import text
 from .models import User
 from . import db, app
+import hashlib, uuid
+
 
 auth = Blueprint('auth', __name__)
 
@@ -45,8 +47,11 @@ def signup_post():
         app.logger.debug("User email already exists")
         return redirect(url_for('auth.signup'))
 
+    salt = uuid.uuid4().hex
+    hashed_password = hashlib.sha512(password + salt).hexdigest()
+
     # create a new user with the form data. TODO: Hash the password so the plaintext version isn't saved.
-    new_user = User(email=email, name=name, password=password)
+    new_user = User(email=email, name=name, password=hashed_password)
 
     # add the new user to the database
     db.session.add(new_user)
